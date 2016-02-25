@@ -31,13 +31,13 @@ else:
 
 		
 		if options.common_words is None:
-			parser.error("newline-delimited file of common words is required for discovery. Please run python fuzz.py --help for usage.")
+			parser.error(".")
 
 		elif options.vectors is None and steps == "test":
-			parser.error("newline-delimited file of vectors is required for fuzzing/testing. Please run python fuzz.py --help for usage.")
+			parser.error(".")
 
 		elif options.sensitive is None and steps == "test":
-			parser.error("newline-delimited file of sensitive data is required for fuzzing/testing. Please run python fuzz.py --help for usage.")
+			parser.error(".")
 			
 		else:
 
@@ -49,7 +49,7 @@ else:
 					username = custom_auth[options.app_to_auth.lower()]["username"]
 					password = custom_auth[options.app_to_auth.lower()]["password"]
 				except:
-					parser.error("application specified in --custom-auth does not exist!")
+					parser.error("")
 
 				if options.app_to_auth.lower() == "dvwa":
 
@@ -87,7 +87,7 @@ else:
 			if page.status_code != 200:
 				parser.error("can't reach")
 			else:
-				logger.info("Successfully reached page!")
+				logger.info("Successfully ")
 
 
 		
@@ -105,4 +105,4 @@ else:
 				test_pages(discovered_pages, session, options)
 	else:
 
-		parser.error("invalid steps")
+		parser.error("invalid")
