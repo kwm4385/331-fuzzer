@@ -2,6 +2,7 @@ import requests
 import argparse
 import sys
 from BeautifulSoup import BeautifulSoup, SoupStrainer
+from urlparse import urljoin
 
 def main():
     parser = argparse.ArgumentParser(description="Usage: fuzz [discover | test] url OPTIONS")
@@ -24,7 +25,11 @@ def main():
             session = tryAuthenticate(url)
             print 'Starting page crawl...'
             knownpages = crawl(url, session)
-            print knownpages
+            print "\nDiscovered pages:"
+            print '=' * 100
+            for p in knownpages:
+                print p
+            print '=' * 100
 
         else :
             parser.error("Invalid action requested")
@@ -49,15 +54,30 @@ def tryAuthenticate(url):
     return s
 
 # Starting with the root url, follows all links recursively and compiles a list of all known pages
-def crawl(url, session, knownpages=[]):
-    print "Crawling " + url
-    root = session.get(url)
-    soup = BeautifulSoup(root.content, parseOnlyThese=SoupStrainer('a'))
-    for link in soup:
-        if link['href'] and not link['href'].startswith("http"):
-            print link['href']
+def crawl(baseurl, session, url="", knownpages=set()):
+    newurl = url if url != "" else baseurl
+    if newurl.endswith('.pdf'):
+        return set()
 
-    return knownpages
+    # print "Crawling " + newurl
+    root = session.get(newurl)
+    soup = BeautifulSoup(root.content, parseOnlyThese=SoupStrainer('a'))
+    newpages = []
+    for link in soup:
+        if link.get('href') and not link.get('href').startswith("http"):
+            newpages += [urljoin(newurl, link.get('href'))]
+
+    if len(set(newpages) - knownpages) == 0:
+        return knownpages
+    else:
+        deeper = []
+        for url in set(newpages) - set(knownpages):
+            knownpages.update([url])
+            deeper += crawl(baseurl, session, url, knownpages)
+        res = set()
+        for s in deeper:
+            res.update([s])
+        return res
 
 if __name__ == "__main__":
     main()
