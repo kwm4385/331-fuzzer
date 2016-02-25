@@ -59,5 +59,20 @@ def crawl(url, session, knownpages=[]):
 
     return knownpages
 
+def inputDiscovery(url, session):
+    formDiscovery(url, session)
+    cookieDiscovery(url, session)
+
+def formDiscovery(url, session):
+    print "Discovering form parameters"
+
+def cookieDiscovery(url, session):
+    page = session.get(url)
+    print "Discovering cookies"
+
+    for discovered_cookie in session.cookies:
+        cookie = {"name": discovered_cookie.name, "value": discovered_cookie.value}
+        print cookie
+
 if __name__ == "__main__":
     main()
