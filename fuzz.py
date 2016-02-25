@@ -1,7 +1,7 @@
 import requests
 import argparse
 import sys
-from BeautifulSoup import BeautifulSoup as bs
+from BeautifulSoup import BeautifulSoup, SoupStrainer
 
 def main():
     parser = argparse.ArgumentParser(description="Usage: fuzz [discover | test] url OPTIONS")
@@ -22,7 +22,9 @@ def main():
             #Probably have the discover functionality in its own file called discover.py
             print "Running discovery on '{}'".format(url)
             session = tryAuthenticate(url)
-            session.get(url + "login.php")
+            print 'Starting page crawl...'
+            knownpages = crawl(url, session)
+            print knownpages
 
         else :
             parser.error("Invalid action requested")
@@ -34,17 +36,28 @@ def tryAuthenticate(url):
     try:
         requests.utils.add_dict_to_cookiejar(s.cookies, {"security": "low"})
         loginpage = s.get(url + "login.php")
-        soup = bs(loginpage.content)
+        soup = BeautifulSoup(loginpage.content)
         token = soup.body.find('input', attrs={"type": "hidden", "name": "user_token"}).get('value').encode('ascii','ignore')
         if token:
             print "Found CSRF token"
 
         r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login", "user_token": token})
         print "Successfully logged in!"
-    except:
-        print "Authentication failed!"
+    except Exception as e:
+        print "Authentication failed! " + str(e)
 
     return s
+
+# Starting with the root url, follows all links recursively and compiles a list of all known pages
+def crawl(url, session, knownpages=[]):
+    print "Crawling " + url
+    root = session.get(url)
+    soup = BeautifulSoup(root.content, parseOnlyThese=SoupStrainer('a'))
+    for link in soup:
+        if link['href'] and not link['href'].startswith("http"):
+            print link['href']
+
+    return knownpages
 
 if __name__ == "__main__":
     main()
