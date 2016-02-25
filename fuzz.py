@@ -1,4 +1,5 @@
 import requests
+from lxml import html
 import argparse
 import sys
 
@@ -14,14 +15,24 @@ def main():
     else:
         requestedAction = sys.argv[1]
         url = sys.argv[2]
+        if not url.endswith("/"):
+            url += '/'
 
         if requestedAction == "discover" :
             #Probably have the discover functionality in its own file called discover.py
             print "Running discovery on '{}'".format(url)
+            session = tryAuthenticate(url)
 
         else :
             parser.error("Invalid action requested")
 
+def tryAuthenticate(url):
+    s = requests.Session()
+    print "Trying to authenticate to DVWA with default credentials"
+    loginpage = requests.get(url + "login.php");
+    tree = html.fromstring(loginpage.content)
+    # r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login"})
+    # print r.text
 
 if __name__ == "__main__":
     main()
