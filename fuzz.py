@@ -16,7 +16,7 @@ else:
 
     if requestedAction == "discover" :
         #Probably have the discover functionality in its own file called discover.py
-
+        print "stuff"
 
     else :
         parser.error("Invalid action requested")
