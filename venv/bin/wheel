@@ -1,4 +1,4 @@
-#!/home/kevin/331-fuzzer/venv/bin/python3.4
+#!/home/kevin/331-fuzzer/venv/bin/python2.7
 
 # -*- coding: utf-8 -*-
 import re

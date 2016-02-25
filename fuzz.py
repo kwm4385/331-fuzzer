@@ -1,7 +1,7 @@
 import requests
-from lxml import html
 import argparse
 import sys
+from BeautifulSoup import BeautifulSoup as bs
 
 def main():
     parser = argparse.ArgumentParser(description="Usage: fuzz [discover | test] url OPTIONS")
@@ -28,11 +28,30 @@ def main():
 
 def tryAuthenticate(url):
     s = requests.Session()
-    print "Trying to authenticate to DVWA with default credentials"
-    loginpage = requests.get(url + "login.php");
-    tree = html.fromstring(loginpage.content)
-    # r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login"})
-    # print r.text
+    print "Trying to authenticate to DVWA with default credentials..."
+    try:
+        requests.utils.add_dict_to_cookiejar(s.cookies, {"security": "low"})
+        loginpage = requests.get(url + "login.php")
+        cookies = loginpage.headers["Set-Cookie"].split(";")
+        for c in cookies:
+            if c.startswith("PHPSESSID"):
+                sessid = c.split("=")[1]
+        requests.utils.add_dict_to_cookiejar(s.cookies, {"PHPSESSID": sessid})
+        print "Found session ID token"
+
+        soup = bs(loginpage.content)
+        token = soup.body.find('input', attrs={"type": "hidden", "name": "user_token"}).get('value').encode('ascii','ignore')
+        if token:
+            print "Found CSRF token"
+            # print {"username": "admin", "password": "password", "Login": "Login", "user_token": token}
+        r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login", "user_token": token})
+
+        print "Successfully logged in!"
+
+    except:
+        print "Authentication failed!"
+
+    return s
 
 if __name__ == "__main__":
     main()
