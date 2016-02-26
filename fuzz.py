@@ -225,8 +225,7 @@ def linksearch(link, domain, iri, session, max_depth, depth, auth):
         if hrefabsolute.startswith(domain) and href_absolute not in urls:
             linksearch(hrefabsolute, domain, iri, session, depthend, depth+1, auth)
 
-    return link
-
+    return l
 
 
 
