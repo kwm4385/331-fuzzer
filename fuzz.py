@@ -191,21 +191,19 @@ def formDiscovery(url, session, auth):
         forms = []
 
         for piece in soup.findAll('form'):
-            form={'action':'','name':'','method':'','input': list()}
+            form = {'action':'','name':'','method':'','inputs': list()}
             if piece in soup.findAll('form'):
-                form['name'] = piece['name']
+                form['name'] = piece.get('name')
 
-            if piece.has.key('action') and piece.has_key('method'):
-                form['action'] = piece['action']
-                form['method'] = piece['method']
+            if piece.get('action') and piece.get('method'):
+                form['action'] = piece.get('action')
+                form['method'] = piece.get('method')
 
-                forms.append(form)
+                for input_field in piece.findAll('input'):
+                    if input_field.get('name'):
+                        form['inputs'].append(input_field.get('name'))
 
-                for input_field in piece.findall('input'):
-                    if input_field.has_key('name'):
-                        form['inputs'].append(input_field['name'])
-
-        print forms
+            forms.append(str(form))
         return forms
     else:
         return []
