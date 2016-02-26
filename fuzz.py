@@ -212,7 +212,7 @@ def linksearch(link, domain, iri, session, max_depth, depth, auth):
 
     if "http://127.0.0.1/dvwa/login.php" in page.link and "logout.php" not in link \
         and "dvwa/login" not in link and auth == "dvwa":
-        logger.info("re-log dvwa")
+        logger.info("log dvwa")
         page, session = dvwa_relogin(session, link)
 
     soup = BeautifulSoup(page.content)
