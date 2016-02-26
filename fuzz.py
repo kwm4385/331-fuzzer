@@ -1,7 +1,6 @@
 import requests
 import argparse
 import itertools
-import time
 import sys
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from urlparse import urljoin
@@ -55,7 +54,6 @@ def runDisovery(url, session, authtype, common_words):
     for p in guessedpages:
         print p
     print '=' * 100
-
     if len(guessedpages) > 0:
         knownpages.update(guessedpages)
 
