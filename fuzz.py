@@ -1,5 +1,7 @@
 import requests
 import argparse
+import itertools
+import time
 import sys
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from urlparse import urljoin
@@ -53,6 +55,9 @@ def runDisovery(url, session, authtype, common_words):
     for p in guessedpages:
         print p
     print '=' * 100
+
+    if len(guessedpages) > 0:
+        knownpages.update(guessedpages)
 
     # Discover cookies on known pages
     print "Discovering cookies..."
@@ -114,8 +119,28 @@ def crawl(baseurl, session, url="", knownpages=set()):
 def guessPages(baseurl, session, common_words):
     with open(common_words) as f:
         lines = [l.replace('\n', '') for l in f.readlines()]
-    print lines
-    return []
+
+    extensions = [w for w in lines if w.startswith('.')]
+    words = [w for w in lines if not w.startswith('.')]
+
+    # We want to try "no extension" too
+    extensions.append('')
+
+    foundpages = []
+
+    # Guess paths of length 1 through 6
+    for i in range(1, 6):
+        paths = list(map("/".join, itertools.permutations(words, i)))
+        # Guess each path by itself and with each extension
+        for p in paths:
+            for ext in extensions:
+                path = urljoin(baseurl, p + ext)
+                sys.stdout.write("Guessing " + path + "\r")
+                sys.stdout.flush()
+                r = session.get(path)
+                if r.status_code == 200:
+                    foundpages.append(path)
+    return foundpages
 
 def inputDiscovery(url, session):
     formDiscovery(url, session)

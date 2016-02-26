@@ -1,4 +1,8 @@
 hi
 world
-tryAuthenticate
 hello
+.php
+.jsp
+.html
+.htm
+.aspx
