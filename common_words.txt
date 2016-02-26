@@ -5,7 +5,6 @@ security
 vulnerabilities
 sql
 upload
-hack
 hidden
 secret
 admin

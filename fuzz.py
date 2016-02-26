@@ -4,6 +4,7 @@ import itertools
 import sys
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from urlparse import urljoin
+import urlparse
 
 def main():
     # Arguments
@@ -36,6 +37,7 @@ def runDisovery(url, session, authtype, common_words):
     tryAuthenticate(session, url, authtype)
 
     # Discover pages by crawling
+    print '=' * 100
     print 'Starting page crawl...'
     knownpages = crawl(url, session)
     print '=' * 100
@@ -57,11 +59,25 @@ def runDisovery(url, session, authtype, common_words):
     if len(guessedpages) > 0:
         knownpages.update(guessedpages)
 
+    # Discover query params in urls
+    print "Analyzing URLs..."
+    params = set()
+    for p in knownpages:
+        params.update(findQueryParams(p))
+    print '=' * 100
+    print "Found query params:"
+    print '=' * 100
+    for p in params:
+        print p
+    print '=' * 100
+
     # Discover cookies on known pages
     print "Discovering cookies..."
     cookies = set()
     for p in knownpages:
         cookies.update(cookieDiscovery(p, session))
+    print '=' * 100
+    print "Found cookies:"
     print '=' * 100
     for c in cookies:
         print c
@@ -144,6 +160,15 @@ def guessPages(baseurl, session, common_words):
                 if r.status_code == 200:
                     foundpages.append(path)
     return foundpages
+
+# Analyze a known URL for query params
+def findQueryParams(url):
+    params = []
+    parsed = urlparse.urlparse(url)
+    query = urlparse.parse_qs(parsed.query)
+    for q in query:
+        params.append(str({"page": url.split("?")[0].encode('ascii','ignore'), "param": q.encode('ascii','ignore')}))
+    return params
 
 def inputDiscovery(url, session):
     formDiscovery(url, session)
