@@ -5,17 +5,16 @@ from BeautifulSoup import BeautifulSoup, SoupStrainer
 from urlparse import urljoin
 
 def main():
+    # Arguments
     parser = argparse.ArgumentParser(description="Web Fuzzer")
-
     parser.add_argument("action")
     parser.add_argument("url")
     parser.add_argument("common_words", metavar="common_words", help="Newline-delimited file of common " +
         "words to be used in page guessing and input guessing. Required.")
     parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
-
     args = parser.parse_args()
-    print args
 
+    # Start
     requestedAction = args.action
     url = args.url
     if not url.endswith("/"):
@@ -30,15 +29,29 @@ def main():
 
 def runDisovery(url, session, authtype):
     print "Running discovery on '{}'".format(url)
+
+    # Authenticate if applicable
     tryAuthenticate(session, url, authtype)
+
+    # Discover pages by crawling
     print 'Starting page crawl...'
     knownpages = crawl(url, session)
-    print "\nDiscovered pages:"
+    print '=' * 100
+    print "Discovered pages by crawling:"
     print '=' * 100
     for p in knownpages:
         print p
     print '=' * 100
 
+    # Discover cookies on known pages
+    print "Discovering cookies..."
+    cookies = set()
+    for p in knownpages:
+        cookies.update(cookieDiscovery(p, session))
+    print '=' * 100
+    for c in cookies:
+        print c
+    print '=' * 100
 
 # Loads the login form for DVWA and tries to log in
 def tryAuthenticate(session, url, authtype):
@@ -95,11 +108,11 @@ def formDiscovery(url, session):
 
 def cookieDiscovery(url, session):
     page = session.get(url)
-    print "Discovering cookies"
-
-    for discovered_cookie in session.cookies:
-        cookie = {"name": discovered_cookie.name, "value": discovered_cookie.value}
-        print cookie
+    cookies = []
+    for c in session.cookies:
+        cookies.append(str({"name": c.name, "value": c.value}))
+    return cookies
+    # TODO: Determine what page set a cookie
 
 if __name__ == "__main__":
     main()
