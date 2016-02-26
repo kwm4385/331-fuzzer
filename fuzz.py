@@ -23,12 +23,12 @@ def main():
 
     if requestedAction == "discover" :
         session = requests.Session()
-        runDisovery(session, url, args.authtype)
+        runDisovery(url, session, args.authtype)
 
     else:
         parser.error("Invalid action requested")
 
-def runDisovery(session, url, authtype):
+def runDisovery(url, session, authtype):
     print "Running discovery on '{}'".format(url)
     tryAuthenticate(session, url, authtype)
     print 'Starting page crawl...'
