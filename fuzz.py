@@ -11,7 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description="Web Fuzzer")
     parser.add_argument("action")
     parser.add_argument("url")
-    parser.add_argument("common_words", metavar="common_words", help="Newline-delimited file of common " +
+    parser.add_argument("common_words", dest="common_words", metavar="FILE", help="Newline-delimited file of common " +
         "words to be used in page guessing and input guessing. Required.")
     parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
     args = parser.parse_args()
@@ -175,14 +175,14 @@ def inputDiscovery(url, session):
 
 def formDiscovery(url, session):
     print "Discovering form parameters"
-    page.session.get(url)
-
+    page = session.get(url)
+    
     if "http://127.0.0.1/svwa/login.php" in page.url and "logout.php" not in url and auth == "dvwa":
         page, session = cookieDiscovery(url, session)
 
         soup = BeautifulSoup(page.content)
-        form = list()
-
+        forms = list()
+        
         for piece in soup.findAll('form'):
             form={'action':'','name':'','method':'','input': list()}
             if piece in soup.findAll('form'):
@@ -193,20 +193,15 @@ def formDiscovery(url, session):
                 form['method'] = piece['method']
 
                 forms.append(form)
-
-                logger.info("--form '%s' found" % (piece['action']))
-
+                
                 for input_field in piece.findall('input'):
                     if input_field.has_key('name'):
                         form['inputs'].append(input_field['name'])
-                        logger.info("--input field '%s' found" % (input_field['name']))
-
 
         return forms, session
 
 
 def cookieDiscovery(url, session):
-    page = session.get(url)
     cookies = []
     for c in session.cookies:
         cookies.append(str({"name": c.name, "value": c.value}))
