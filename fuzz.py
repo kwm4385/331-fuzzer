@@ -5,53 +5,57 @@ from BeautifulSoup import BeautifulSoup, SoupStrainer
 from urlparse import urljoin
 
 def main():
-    parser = argparse.ArgumentParser(description="Usage: fuzz [discover | test] url OPTIONS")
+    parser = argparse.ArgumentParser(description="Web Fuzzer")
 
-    parser.add_argument("--common-words", dest="common_words", metavar="FILE", help="Newline-delimited file of common " +
+    parser.add_argument("action")
+    parser.add_argument("url")
+    parser.add_argument("common_words", metavar="common_words", help="Newline-delimited file of common " +
         "words to be used in page guessing and input guessing. Required.")
+    parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
 
-    if len(sys.argv) < 4 :
-        parser.error("Received incorrect number of arguments")
+    args = parser.parse_args()
+    print args
+
+    requestedAction = args.action
+    url = args.url
+    if not url.endswith("/"):
+        url += '/'
+
+    if requestedAction == "discover" :
+        #Probably have the discover functionality in its own file called discover.py
+        print "Running discovery on '{}'".format(url)
+        session = requests.Session()
+        tryAuthenticate(session, url, args.authtype)
+        print 'Starting page crawl...'
+        knownpages = crawl(url, session)
+        print "\nDiscovered pages:"
+        print '=' * 100
+        for p in knownpages:
+            print p
+        print '=' * 100
 
     else:
-        requestedAction = sys.argv[1]
-        url = sys.argv[2]
-        if not url.endswith("/"):
-            url += '/'
-
-        if requestedAction == "discover" :
-            #Probably have the discover functionality in its own file called discover.py
-            print "Running discovery on '{}'".format(url)
-            session = tryAuthenticate(url)
-            print 'Starting page crawl...'
-            knownpages = crawl(url, session)
-            print "\nDiscovered pages:"
-            print '=' * 100
-            for p in knownpages:
-                print p
-            print '=' * 100
-
-        else :
-            parser.error("Invalid action requested")
+        parser.error("Invalid action requested")
 
 # Loads the login form for DVWA and tries to log in
-def tryAuthenticate(url):
-    s = requests.Session()
-    print "Trying to authenticate to DVWA with default credentials..."
-    try:
-        requests.utils.add_dict_to_cookiejar(s.cookies, {"security": "low"})
-        loginpage = s.get(url + "login.php")
-        soup = BeautifulSoup(loginpage.content)
-        token = soup.body.find('input', attrs={"type": "hidden", "name": "user_token"}).get('value').encode('ascii','ignore')
-        if token:
-            print "Found CSRF token"
+def tryAuthenticate(session, url, authtype):
+    s = session
+    if authtype == "dvwa":
+        print "Trying to authenticate to DVWA with default credentials..."
+        try:
+            requests.utils.add_dict_to_cookiejar(s.cookies, {"security": "low"})
+            loginpage = s.get(url + "login.php")
+            soup = BeautifulSoup(loginpage.content)
+            token = soup.body.find('input', attrs={"type": "hidden", "name": "user_token"}).get('value').encode('ascii','ignore')
+            if token:
+                print "Found CSRF token"
 
-        r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login", "user_token": token})
-        print "Successfully logged in!"
-    except Exception as e:
-        print "Authentication failed! " + str(e)
+            r = s.post(url + "login.php", data={"username": "admin", "password": "password", "Login": "Login", "user_token": token})
+            print "Successfully logged in!"
+        except Exception as e:
+            print "Authentication failed! " + str(e)
 
-    return s
+        return s
 
 # Starting with the root url, follows all links recursively and compiles a list of all known pages
 def crawl(baseurl, session, url="", knownpages=set()):
