@@ -22,20 +22,23 @@ def main():
         url += '/'
 
     if requestedAction == "discover" :
-        #Probably have the discover functionality in its own file called discover.py
-        print "Running discovery on '{}'".format(url)
         session = requests.Session()
-        tryAuthenticate(session, url, args.authtype)
-        print 'Starting page crawl...'
-        knownpages = crawl(url, session)
-        print "\nDiscovered pages:"
-        print '=' * 100
-        for p in knownpages:
-            print p
-        print '=' * 100
+        runDisovery(session, url, args.authtype)
 
     else:
         parser.error("Invalid action requested")
+
+def runDisovery(session, url, authtype):
+    print "Running discovery on '{}'".format(url)
+    tryAuthenticate(session, url, authtype)
+    print 'Starting page crawl...'
+    knownpages = crawl(url, session)
+    print "\nDiscovered pages:"
+    print '=' * 100
+    for p in knownpages:
+        print p
+    print '=' * 100
+
 
 # Loads the login form for DVWA and tries to log in
 def tryAuthenticate(session, url, authtype):
