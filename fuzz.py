@@ -17,17 +17,18 @@ def main():
     # Start
     requestedAction = args.action
     url = args.url
+    common_words = args.common_words
     if not url.endswith("/"):
         url += '/'
 
     if requestedAction == "discover" :
         session = requests.Session()
-        runDisovery(url, session, args.authtype)
+        runDisovery(url, session, args.authtype, common_words)
 
     else:
         parser.error("Invalid action requested")
 
-def runDisovery(url, session, authtype):
+def runDisovery(url, session, authtype, common_words):
     print "Running discovery on '{}'".format(url)
 
     # Authenticate if applicable
@@ -40,6 +41,16 @@ def runDisovery(url, session, authtype):
     print "Discovered pages by crawling:"
     print '=' * 100
     for p in knownpages:
+        print p
+    print '=' * 100
+
+    # Discover pages by guessing using common words file
+    print 'Starting page guessing...'
+    guessedpages = guessPages(url, session, common_words)
+    print '=' * 100
+    print "Discovered pages by guessing:"
+    print '=' * 100
+    for p in guessedpages:
         print p
     print '=' * 100
 
@@ -98,6 +109,13 @@ def crawl(baseurl, session, url="", knownpages=set()):
         for s in deeper:
             res.update([s])
         return res
+
+# Guess urls by combining paths made up of common words with the base URL
+def guessPages(baseurl, session, common_words):
+    with open(common_words) as f:
+        lines = [l.replace('\n', '') for l in f.readlines()]
+    print lines
+    return []
 
 def inputDiscovery(url, session):
     formDiscovery(url, session)
