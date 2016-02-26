@@ -182,6 +182,7 @@ def findQueryParams(url):
         params.append(str({"page": url.split("?")[0].encode('ascii','ignore'), "param": q.encode('ascii','ignore')}))
     return params
 
+# Find forms and inputs on a page
 def formDiscovery(url, session, auth):
     page = session.get(url)
 
