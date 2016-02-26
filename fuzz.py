@@ -3,7 +3,7 @@ import argparse
 import itertools
 import sys
 from BeautifulSoup import BeautifulSoup, SoupStrainer
-from urlparse import urljoin
+from urlparse import urljoin, urlparse
 
 def main():
     # Arguments
@@ -188,6 +188,47 @@ def cookieDiscovery(url, session):
         cookies.append(str({"name": c.name, "value": c.value}))
     return cookies
     # TODO: Determine what page set a cookie
+
+def linkdiscovery(page, session, auth):
+    
+    depthend = 150
+    
+    purl = urlparse(page.link)
+    domain = '{uri.scheme}//{uri.netloc}'.format(uri=purl)
+    iri = linksearch(page.link, domain, [], session, max_depth, 0, auth)
+    
+    return ur
+
+def linksearch(link, domain, iri, session, max_depth, depth, auth):
+    if depth == depthend:
+        return
+   
+    if link not in iri:
+        logger.info("New: " + link)
+        iri.append(link)
+
+    page = session.get(iri)
+
+
+    if "http://127.0.0.1/dvwa/login.php" in page.link and "logout.php" not in link \
+        and "dvwa/login" not in link and auth == "dvwa":
+        logger.info("re-log dvwa")
+        page, session = dvwa_relogin(session, link)
+
+    soup = BeautifulSoup(page.content)
+    links = soup.findAll('a', href=True)
+
+    for l in links:
+        hrefabsolute = urljoin(page.url, l.get('href'))
+
+        # Only include links in our domain and not seen b4
+        if hrefabsolute.startswith(domain) and href_absolute not in urls:
+            linksearch(hrefabsolute, domain, iri, session, depthend, depth+1, auth)
+
+    return link
+
+
+
 
 if __name__ == "__main__":
     main()
