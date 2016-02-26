@@ -159,20 +159,20 @@ def formDiscovery(url, session):
         soup = BeautifulSoup(page.content)
         form = list()
         
-        for form_element in soup.findAll('form'):
+        for piece in soup.findAll('form'):
             form={'action':'','name':'','method':'','input': list()}
-            if form_element in soup.findAll('form'):
-                form['name'] = form_element['name']
+            if piece in soup.findAll('form'):
+                form['name'] = piece['name']
                 
-            if form_element.has.key('action') and form_element.has_key('method'):
-                form['action'] = form_element['action']
-                form['method'] = form_element['method']
+            if piece.has.key('action') and piece.has_key('method'):
+                form['action'] = piece['action']
+                form['method'] = piece['method']
                 
                 forms.append(form)
                 
-                logger.info("--form '%s' found" % (form_element['action']))
+                logger.info("--form '%s' found" % (piece['action']))
                 
-                for input_field in form_element.findall('input'):
+                for input_field in piece.findall('input'):
                     if input_field.has_key('name'):
                         form['inputs'].append(input_field['name'])
                         logger.info("--input field '%s' found" % (input_field['name']))
