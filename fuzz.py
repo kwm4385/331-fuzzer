@@ -128,14 +128,19 @@ def guessPages(baseurl, session, common_words):
 
     foundpages = []
 
-    # Guess paths of length 1 through 6
-    for i in range(1, 6):
+    # Guess paths of length 1 through 5
+    for i in range(1, 5):
         paths = list(map("/".join, itertools.permutations(words, i)))
         # Guess each path by itself and with each extension
         for p in paths:
+            last_line_len = 0
             for ext in extensions:
                 path = urljoin(baseurl, p + ext)
-                sys.stdout.write("Guessing " + path + "\r")
+                out = "Guessing " + path
+                spacing = " " * (last_line_len - len(out) if last_line_len > len(out) else 0)
+                out += spacing + "\r"
+                last_line_len = len(out)
+                sys.stdout.write(out)
                 sys.stdout.flush()
                 r = session.get(path)
                 if r.status_code == 200:
