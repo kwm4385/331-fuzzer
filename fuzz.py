@@ -199,33 +199,6 @@ def linkdiscovery(page, session, auth):
     
     return ur
 
-def linksearch(link, domain, iri, session, max_depth, depth, auth):
-    if depth == depthend:
-        return
-   
-    if link not in iri:
-        logger.info("New: " + link)
-        iri.append(link)
-
-    page = session.get(iri)
-
-
-    if "http://127.0.0.1/dvwa/login.php" in page.link and "logout.php" not in link \
-        and "dvwa/login" not in link and auth == "dvwa":
-        logger.info("log dvwa")
-        page, session = dvwa_relogin(session, link)
-
-    soup = BeautifulSoup(page.content)
-    links = soup.findAll('a', href=True)
-
-    for l in links:
-        hrefabsolute = urljoin(page.url, l.get('href'))
-
-        # Only include links in our domain and not seen b4
-        if hrefabsolute.startswith(domain) and href_absolute not in urls:
-            linksearch(hrefabsolute, domain, iri, session, depthend, depth+1, auth)
-
-    return l
 
 
 
