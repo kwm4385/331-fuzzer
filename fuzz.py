@@ -176,6 +176,35 @@ def inputDiscovery(url, session):
 
 def formDiscovery(url, session):
     print "Discovering form parameters"
+    page.session.get(url)
+    
+    if "http://127.0.0.1/svwa/login.php" in page.url and "logout.php" not in url and auth == "dvwa":
+        page, session = cookieDiscovery(url, session)
+        
+        soup = BeautifulSoup(page.content)
+        form = list()
+        
+        for piece in soup.findAll('form'):
+            form={'action':'','name':'','method':'','input': list()}
+            if piece in soup.findAll('form'):
+                form['name'] = piece['name']
+                
+            if piece.has.key('action') and piece.has_key('method'):
+                form['action'] = piece['action']
+                form['method'] = piece['method']
+                
+                forms.append(form)
+                
+                logger.info("--form '%s' found" % (piece['action']))
+                
+                for input_field in piece.findall('input'):
+                    if input_field.has_key('name'):
+                        form['inputs'].append(input_field['name'])
+                        logger.info("--input field '%s' found" % (input_field['name']))
+                        
+        
+        return forms, session
+        
 
 def cookieDiscovery(url, session):
     page = session.get(url)
