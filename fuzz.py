@@ -98,13 +98,19 @@ def runDisovery(url, session, authtype, common_words):
         print c
     print '=' * 100
 
-def runTest(url, session, authtype, timeThreshold):
+def runTest(url, session, authtype, timeThreshold, common_words, vectors):
     print "Running test on '{}'".format(url)
 
     # Authenticate if applicable
     tryAuthenticate(session, url, authtype)
 
     # timeRequest(lambda: requests.get(url), timeThreshold)
+
+    # pages = crawl(url, session)
+    # for guessedPage in guessPage(url, session, common_words):
+    #   pages.add(guessedPage)
+    #
+    #
 
 # Wraps a request in a timer and prints a message if it is greater than the threshold
 # Will also print a message if the status code != 200
@@ -241,6 +247,46 @@ def cookieDiscovery(url, session):
         cookies.append(str({"name": c.name, "value": c.value}))
     return cookies
     # TODO: Determine what page set a cookie
+
+# Test that pages with form inputs sanitize their data
+def lackOfSanitization(pages, random, vectors, session, auth):
+
+    unSanitizedPages = []
+    specialChars = ['<', '>', '/', '\'', '"']
+
+    if random == "true":
+        i = random.randint()
+        while i > len(pages) & i < 0:
+            i = random.randint()
+
+        url = pages[i].get("url")
+        forms = formDiscovery(url, session, auth)
+
+        # Apply vectors to form
+
+        #if response recieved
+        # for char in SpecialChars:
+        #   if char in response:
+        #   unSanitizedPages.add(url)
+        #   break
+        #
+
+    else:
+        for page in pages:
+            url = page.get("url")
+            forms = formDiscovery(url, session, auth)
+
+            #apply vectors to form
+
+            #if response recieved
+            #same as above. Also need to not duplicate code
+
+    return unSanitizedPages
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
