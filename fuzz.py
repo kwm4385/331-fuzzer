@@ -14,6 +14,7 @@ def main():
     parser.add_argument("common_words", metavar="FILE", help="Newline-delimited file of common " +
         "words to be used in page guessing and input guessing. Required.")
     parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
+    parser.add_argument("--slow", dest="slow", type=int, required=False, default=500, help=" Number of milliseconds considered when a response is considered 'slow'. Default is 500 milliseconds")
     args = parser.parse_args()
 
     # Start
@@ -28,7 +29,7 @@ def main():
         runDisovery(url, session, args.authtype, common_words)
     elif requestedAction == "test":
         session = requests.Session()
-        runTest(url, session, args.authtype)
+        runTest(url, session, args.authtype, args.slow)
     else:
         parser.error("Invalid action requested")
 
@@ -97,11 +98,21 @@ def runDisovery(url, session, authtype, common_words):
         print c
     print '=' * 100
 
-def runTest(url, session, authtype):
+def runTest(url, session, authtype, timeThreshold):
     print "Running test on '{}'".format(url)
 
     # Authenticate if applicable
     tryAuthenticate(session, url, authtype)
+
+    # timeRequest(lambda: requests.get(url), timeThreshold)
+
+# Wraps a request in a timer and prints a message if it is greater than the threshold
+# Example usage: reponse = timeRequest(lambda: requests.get(url), timeThreshold)
+def timeRequest(req, threshold):
+    request = req()
+    if request.elapsed and request.elapsed.total_seconds() * 1000 > threshold:
+        print '\033[93m' + "Request to {} took longer than {} ms. ({})".format(request.url, threshold, request.elapsed) + '\033[0m'
+    return request
 
 # Loads the login form for DVWA and tries to log in
 def tryAuthenticate(session, url, authtype):
