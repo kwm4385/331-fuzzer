@@ -107,11 +107,18 @@ def runTest(url, session, authtype, timeThreshold):
     # timeRequest(lambda: requests.get(url), timeThreshold)
 
 # Wraps a request in a timer and prints a message if it is greater than the threshold
+# Will also print a message if the status code != 200
 # Example usage: reponse = timeRequest(lambda: requests.get(url), timeThreshold)
 def timeRequest(req, threshold):
     request = req()
     if request.elapsed and request.elapsed.total_seconds() * 1000 > threshold:
         print '\033[93m' + "Request to {} took longer than {} ms. ({})".format(request.url, threshold, request.elapsed) + '\033[0m'
+
+    try:
+        request.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print '\033[93m' + "Request returned a non-200 status code. ({})".format(e) + '\033[0m'
+
     return request
 
 # Loads the login form for DVWA and tries to log in
