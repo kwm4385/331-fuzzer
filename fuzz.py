@@ -26,7 +26,9 @@ def main():
     if requestedAction == "discover" :
         session = requests.Session()
         runDisovery(url, session, args.authtype, common_words)
-
+    elif requestedAction == "test":
+        session = requests.Session()
+        runTest(url, session, args.authtype)
     else:
         parser.error("Invalid action requested")
 
@@ -94,6 +96,12 @@ def runDisovery(url, session, authtype, common_words):
     for c in cookies:
         print c
     print '=' * 100
+
+def runTest(url, session, authtype):
+    print "Running test on '{}'".format(url)
+
+    # Authenticate if applicable
+    tryAuthenticate(session, url, authtype)
 
 # Loads the login form for DVWA and tries to log in
 def tryAuthenticate(session, url, authtype):
