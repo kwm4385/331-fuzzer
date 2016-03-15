@@ -110,6 +110,8 @@ def runTest(url, session, authtype, timeThreshold, common_words, vectors):
     # for guessedPage in guessPage(url, session, common_words):
     #   pages.add(guessedPage)
     #
+    # lackOfSanitization(pages, session, vectors) ----- Need to get random from command line arguments
+    #
     #
 
 # Wraps a request in a timer and prints a message if it is greater than the threshold
@@ -249,7 +251,7 @@ def cookieDiscovery(url, session):
     # TODO: Determine what page set a cookie
 
 # Test that pages with form inputs sanitize their data
-def lackOfSanitization(pages, random, vectors, session, auth):
+def lackOfSanitization(pages, session, vectors, random):
     unSanitizedPages = []
     specialChars = ['<', '>', '/', '\'', '"']
     pagesToCheck = []
@@ -265,18 +267,24 @@ def lackOfSanitization(pages, random, vectors, session, auth):
     else:
         pagesToCheck = pages
 
-    for page in pages:
+    for page in pagesToCheck:
         url = page.get("url")
-        forms = formDiscovery(url, session, auth)
+        specialCharFound = False
 
-        for vector in vectors:
-            for form in forms:
-                # apply the vector to inputs
-                # if response recieved
-                #   for char in SpecialChars:
-                #   if char in response:
-                #       unSanitizedPages.add(url)
-                #       break
+        while not specialCharFound:
+            for vector in vectors:
+                soup = BeautifulSoup(page.content)
+                payload = []
+
+                for input_field in soup.findAll("input"):
+                    payload[input_field] = vector
+
+                response = session.post(url, data=payload)
+                for char in specialChars:
+                    if char in response.text:
+                        unSanitizedPages.append(url)
+                        specialCharFound = True
+                        break
 
     return unSanitizedPages
 
