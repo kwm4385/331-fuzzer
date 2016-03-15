@@ -250,43 +250,35 @@ def cookieDiscovery(url, session):
 
 # Test that pages with form inputs sanitize their data
 def lackOfSanitization(pages, random, vectors, session, auth):
-
     unSanitizedPages = []
     specialChars = ['<', '>', '/', '\'', '"']
+    pagesToCheck = []
 
     if random == "true":
-        i = random.randint()
-        while i > len(pages) & i < 0:
+        while len(pagesToCheck) < len(pages):
             i = random.randint()
-
-        url = pages[i].get("url")
-        forms = formDiscovery(url, session, auth)
-
-        # Apply vectors to form
-
-        #if response recieved
-        # for char in SpecialChars:
-        #   if char in response:
-        #   unSanitizedPages.add(url)
-        #   break
-        #
+            while i > len(pages) & i < 0:
+                i = random.randint()
+            if not pages[i] in pagesToCheck:
+                pagesToCheck.append(pages[i])
 
     else:
-        for page in pages:
-            url = page.get("url")
-            forms = formDiscovery(url, session, auth)
+        pagesToCheck = pages
 
-            #apply vectors to form
+    for page in pages:
+        url = page.get("url")
+        forms = formDiscovery(url, session, auth)
 
-            #if response recieved
-            #same as above. Also need to not duplicate code
+        for vector in vectors:
+            for form in forms:
+                # apply the vector to inputs
+                # if response recieved
+                #   for char in SpecialChars:
+                #   if char in response:
+                #       unSanitizedPages.add(url)
+                #       break
 
     return unSanitizedPages
-
-
-
-
-
 
 if __name__ == "__main__":
     main()
