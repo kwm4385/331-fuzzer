@@ -15,21 +15,27 @@ def main():
         "words to be used in page guessing and input guessing. Required.")
     parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
     parser.add_argument("--slow", dest="slow", type=int, required=False, default=500, help=" Number of milliseconds considered when a response is considered 'slow'. Default is 500 milliseconds")
+    parser.add_argument("vectors", metavar="FILE", help="Newline-delimited file of common exploits to vulnerabilities. "
+        + "Required.")
+    parser.add_argument("--random", dest="random", metavar="STRING", help="When off, try each input to each page "
+        + "systematically.  When on, choose a random page, then a random input field and test all vectors. Default: false.")
     args = parser.parse_args()
 
     # Start
     requestedAction = args.action
     url = args.url
-    common_words = args.common_words
     if not url.endswith("/"):
         url += '/'
 
     if requestedAction == "discover" :
         session = requests.Session()
+        common_words = args.common_words
         runDisovery(url, session, args.authtype, common_words)
     elif requestedAction == "test":
         session = requests.Session()
-        runTest(url, session, args.authtype, args.slow)
+        vectors = args.vectors
+        random = args.random
+        runTest(url, session, args.authtype, args.slow, vectors, random)
     else:
         parser.error("Invalid action requested")
 
@@ -98,7 +104,7 @@ def runDisovery(url, session, authtype, common_words):
         print c
     print '=' * 100
 
-def runTest(url, session, authtype, timeThreshold, common_words, vectors):
+def runTest(url, session, authtype, timeThreshold, vectors, random):
     print "Running test on '{}'".format(url)
 
     # Authenticate if applicable
@@ -106,11 +112,16 @@ def runTest(url, session, authtype, timeThreshold, common_words, vectors):
 
     # timeRequest(lambda: requests.get(url), timeThreshold)
 
-    # pages = crawl(url, session)
-    # for guessedPage in guessPage(url, session, common_words):
+    pages = crawl(url, session)
+    #for guessedPage in guessPage(url, session, common_words):
     #   pages.add(guessedPage)
     #
-    # lackOfSanitization(pages, session, vectors) ----- Need to get random from command line arguments
+    print "Testing form inputs for lack of sanitization..."
+    print '=' * 100
+    print "Found pages lacking sanitized input fields:"
+    print '=' * 100
+    for unsanitizedPage in lackOfSanitization(pages, session, vectors, random):
+        print unsanitizedPage
     #
     #
 
