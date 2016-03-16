@@ -264,7 +264,7 @@ def cookieDiscovery(url, session):
 # Test that pages with form inputs sanitize their data
 def lackOfSanitization(pages, session, vectors, random):
     unSanitizedPages = []
-    specialChars = ['<', '>', '/', '\'', '"']
+    specialChars = ['<', '>', '/', '\'', '"', '&', '#', '+', '-', ';', '|', '@', '=']
     pagesToCheck = []
 
     if random == "true":
