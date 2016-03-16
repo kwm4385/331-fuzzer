@@ -15,21 +15,28 @@ def main():
         "words to be used in page guessing and input guessing. Required.")
     parser.add_argument("--auth", dest="authtype", metavar="STRING", help="Use custom authentication for supported target apps. Options are: 'dvwa'")
     parser.add_argument("--slow", dest="slow", type=int, required=False, default=500, help=" Number of milliseconds considered when a response is considered 'slow'. Default is 500 milliseconds")
+    parser.add_argument("vectors", metavar="FILE", help="Newline-delimited file of common exploits to vulnerabilities. "
+        + "Required.")
+    parser.add_argument("--random", dest="random", metavar="STRING", help="When off, try each input to each page "
+        + "systematically.  When on, choose a random page, then a random input field and test all vectors. Default: false.")
     args = parser.parse_args()
 
     # Start
     requestedAction = args.action
     url = args.url
-    common_words = args.common_words
     if not url.endswith("/"):
         url += '/'
+
+    common_words = args.common_words
 
     if requestedAction == "discover" :
         session = requests.Session()
         runDisovery(url, session, args.authtype, common_words)
     elif requestedAction == "test":
         session = requests.Session()
-        runTest(url, session, args.authtype, args.slow)
+        vectors = args.vectors
+        random = args.random
+        runTest(url, session, args.authtype, args.slow, vectors, random, common_words)
     else:
         parser.error("Invalid action requested")
 
@@ -98,13 +105,24 @@ def runDisovery(url, session, authtype, common_words):
         print c
     print '=' * 100
 
-def runTest(url, session, authtype, timeThreshold):
+def runTest(url, session, authtype, timeThreshold, vectors, random, common_words):
     print "Running test on '{}'".format(url)
 
     # Authenticate if applicable
     tryAuthenticate(session, url, authtype)
 
     # timeRequest(lambda: requests.get(url), timeThreshold)
+
+    pages = crawl(url, session)
+    for guessedPage in guessPages(url, session, common_words):
+        pages.add(guessedPage)
+
+    print "Testing form inputs for lack of sanitization..."
+    print '=' * 100
+    print "Found pages lacking sanitized input fields:"
+    print '=' * 100
+    for unsanitizedPage in lackOfSanitization(pages, session, vectors, random):
+        print unsanitizedPage
 
 # Wraps a request in a timer and prints a message if it is greater than the threshold
 # Will also print a message if the status code != 200
@@ -241,6 +259,44 @@ def cookieDiscovery(url, session):
         cookies.append(str({"name": c.name, "value": c.value}))
     return cookies
     # TODO: Determine what page set a cookie
+
+# Test that pages with form inputs sanitize their data
+def lackOfSanitization(pages, session, vectors, random):
+    unSanitizedPages = []
+    specialChars = ['<', '>', '/', '\'', '"', '&', '#', '+', '-', ';', '|', '@', '=']
+    pagesToCheck = []
+
+    if random == "true":
+        while len(pagesToCheck) < len(pages):
+            i = random.randint()
+            while i > len(pages) & i < 0:
+                i = random.randint()
+            if not pages[i] in pagesToCheck:
+                pagesToCheck.append(pages[i])
+
+    else:
+        pagesToCheck = pages
+
+    for page in pagesToCheck:
+        url = page.get("url")
+        specialCharFound = False
+
+        while not specialCharFound:
+            for vector in vectors:
+                soup = BeautifulSoup(page.content)
+                payload = []
+
+                for input_field in soup.findAll("input"):
+                    payload[input_field] = vector
+
+                response = session.post(url, data=payload)
+                for char in specialChars:
+                    if char in response.text:
+                        unSanitizedPages.append(url)
+                        specialCharFound = True
+                        break
+
+    return unSanitizedPages
 
 if __name__ == "__main__":
     main()
