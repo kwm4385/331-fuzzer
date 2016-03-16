@@ -27,15 +27,16 @@ def main():
     if not url.endswith("/"):
         url += '/'
 
+    common_words = args.common_words
+
     if requestedAction == "discover" :
         session = requests.Session()
-        common_words = args.common_words
         runDisovery(url, session, args.authtype, common_words)
     elif requestedAction == "test":
         session = requests.Session()
         vectors = args.vectors
         random = args.random
-        runTest(url, session, args.authtype, args.slow, vectors, random)
+        runTest(url, session, args.authtype, args.slow, vectors, random, common_words)
     else:
         parser.error("Invalid action requested")
 
@@ -104,7 +105,7 @@ def runDisovery(url, session, authtype, common_words):
         print c
     print '=' * 100
 
-def runTest(url, session, authtype, timeThreshold, vectors, random):
+def runTest(url, session, authtype, timeThreshold, vectors, random, common_words):
     print "Running test on '{}'".format(url)
 
     # Authenticate if applicable
@@ -113,17 +114,15 @@ def runTest(url, session, authtype, timeThreshold, vectors, random):
     # timeRequest(lambda: requests.get(url), timeThreshold)
 
     pages = crawl(url, session)
-    #for guessedPage in guessPage(url, session, common_words):
-    #   pages.add(guessedPage)
-    #
+    for guessedPage in guessPages(url, session, common_words):
+        pages.add(guessedPage)
+
     print "Testing form inputs for lack of sanitization..."
     print '=' * 100
     print "Found pages lacking sanitized input fields:"
     print '=' * 100
     for unsanitizedPage in lackOfSanitization(pages, session, vectors, random):
         print unsanitizedPage
-    #
-    #
 
 # Wraps a request in a timer and prints a message if it is greater than the threshold
 # Will also print a message if the status code != 200
